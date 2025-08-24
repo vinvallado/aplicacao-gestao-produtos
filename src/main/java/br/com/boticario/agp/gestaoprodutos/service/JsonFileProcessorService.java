@@ -106,8 +106,22 @@ public class JsonFileProcessorService {
         log.debug("Iniciando processamento do arquivo: {}", filename);
 
         try (InputStream inputStream = resource.getInputStream()) {
-            // Lê e converte o JSON para uma lista de DTOs
-            List<ProductImportDto> productDtos = objectMapper.readValue(inputStream, new TypeReference<List<ProductImportDto>>() {});
+            // Lê o JSON como um nó para verificar a estrutura
+            com.fasterxml.jackson.databind.JsonNode rootNode = objectMapper.readTree(inputStream);
+            
+            // Verifica se o JSON tem a estrutura esperada (com campo 'data')
+            com.fasterxml.jackson.databind.JsonNode dataNode = rootNode.path("data");
+            List<ProductImportDto> productDtos;
+            
+            if (dataNode.isArray()) {
+                // Se o JSON tem um campo 'data' com um array, usa esse array
+                productDtos = objectMapper.convertValue(dataNode, new TypeReference<List<ProductImportDto>>() {});
+            } else if (rootNode.isArray()) {
+                // Se o JSON é diretamente um array, usa o rootNode
+                productDtos = objectMapper.convertValue(rootNode, new TypeReference<List<ProductImportDto>>() {});
+            } else {
+                throw new InvalidJsonFormatException("Formato JSON inválido no arquivo " + filename + ": esperado um array ou um objeto com campo 'data' contendo um array");
+            }
             
             // Valida os DTOs
             validateProductDtos(productDtos, filename);

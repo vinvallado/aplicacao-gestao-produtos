@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import br.com.boticario.agp.gestaoprodutos.exception.AuthenticationException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.time.LocalDateTime;
@@ -93,6 +94,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.error("Violação de restrição: {}", ex.getMessage());
         String error = "Erro de validação nos parâmetros da requisição";
         return buildErrorResponse(new RuntimeException(error), HttpStatus.BAD_REQUEST, request);
+    }
+    
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Object> handleAuthenticationException(
+            AuthenticationException ex, WebRequest request) {
+        
+        log.error("Erro de autenticação: {}", ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.UNAUTHORIZED, request);
     }
 
     @ExceptionHandler(Exception.class)

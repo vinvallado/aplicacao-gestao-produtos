@@ -31,6 +31,9 @@
 		<org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
 		<lombok.version>1.18.32</lombok.version>
 		<springdoc.version>2.3.0</springdoc.version>
+		<spring.datasource.url>jdbc:postgresql://localhost:5432/boticario_products</spring.datasource.url>
+		<spring.datasource.username>manager</spring.datasource.username>
+		<spring.datasource.password>root</spring.datasource.password>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -217,6 +220,28 @@
 					</execution>
 				</executions>
 			</plugin>
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>10.10.0</version>
+                <configuration>
+                    <url>${spring.datasource.url}</url>
+                    <user>${spring.datasource.username}</user>
+                    <password>${spring.datasource.password}</password>
+                    <locations>
+                        <location>classpath:db/migration</location>
+                    </locations>
+                    <baselineOnMigrate>true</baselineOnMigrate>
+                    <validateOnMigrate>true</validateOnMigrate>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>42.7.3</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
 		</plugins>
 	</build>
 
