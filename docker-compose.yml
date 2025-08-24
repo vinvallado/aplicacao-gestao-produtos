@@ -1,0 +1,30 @@
+
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: postgres-db-boticario
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=manager
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=boticario_products
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  product-management-app:
+    container_name: product-app-boticario
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/boticario_products
+      - SPRING_DATASOURCE_USERNAME=manager
+      - SPRING_DATASOURCE_PASSWORD=root
+
+volumes:
+  postgres_data:
