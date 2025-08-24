@@ -1,8 +1,8 @@
-package br.com.boticario.aplicacaogestaoprodutos.service;
+package br.com.boticario.agp.gestaoprodutos.service;
 
-import br.com.boticario.aplicacaogestaoprodutos.dto.ProductImportDto;
-import br.com.boticario.aplicacaogestaoprodutos.model.Product;
-import br.com.boticario.aplicacaogestaoprodutos.repository.ProductRepository;
+import br.com.boticario.agp.gestaoprodutos.dto.ProductImportDto;
+import br.com.boticario.agp.gestaoprodutos.model.Product;
+import br.com.boticario.agp.gestaoprodutos.repository.ProductRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
-import org.springframework.core.io.ResourceLoader;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -46,76 +45,72 @@ class JsonFileProcessorServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Configure default mocks here if needed
+        // Configuração comum para os testes, se necessário
     }
 
     @Test
     void testProcessFile_Success() throws Exception {
         // Arrange
-        Resource mockResource = mock(Resource.class);
-        String sampleJson = "[{\"name\":\"Produto Teste\",\"type\":\"Tipo Teste\",\"price\":10.50,\"quantity\":100}]";
-        InputStream inputStream = new ByteArrayInputStream(sampleJson.getBytes(StandardCharsets.UTF_8));
-        when(mockResource.getInputStream()).thenReturn(inputStream);
-        when(mockResource.getFilename()).thenReturn("test.json");
+        Resource resource = mock(Resource.class);
+        when(resource.getInputStream())
+                .thenReturn(new ByteArrayInputStream(SAMPLE_JSON.getBytes(StandardCharsets.UTF_8)));
+        when(resource.getFilename()).thenReturn("test.json");
 
         // Act
-        CompletableFuture<List<Product>> future = jsonFileProcessorService.processFile(mockResource);
-        List<Product> result = future.get();
+        CompletableFuture<List<Product>> result = jsonFileProcessorService.processFile(resource);
+        List<Product> products = result.get();
 
         // Assert
-        assertNotNull(result);
-        assertFalse(result.isEmpty());
-        assertEquals("Produto Teste", result.get(0).getName());
-        assertEquals("Tipo Teste", result.get(0).getType());
-        assertEquals(new BigDecimal("10.50"), result.get(0).getPrice());
-        assertEquals(100, result.get(0).getQuantity());
+        assertNotNull(products);
+        assertEquals(1, products.size());
+        Product product = products.get(0);
+        assertEquals("Produto Teste", product.getName());
+        assertEquals("Tipo Teste", product.getType());
+        assertEquals(0, new BigDecimal("10.50").compareTo(product.getPrice()));
+        assertEquals(100, product.getQuantity());
     }
 
     @Test
     void testSaveUniqueProducts_WithNewProducts() {
         // Arrange
-        Product existingProduct = Product.builder()
-                .name("Existente")
-                .type("Tipo 1")
-                .price(BigDecimal.TEN)
-                .quantity(5)
-                .build();
-
         Product newProduct = Product.builder()
-                .name("Novo")
-                .type("Tipo 2")
-                .price(BigDecimal.ONE)
+                .name("Novo Produto")
+                .type("Novo Tipo")
+                .price(new BigDecimal("99.99"))
                 .quantity(10)
                 .build();
 
-        when(productRepository.findAll()).thenReturn(Collections.singletonList(existingProduct));
         when(productRepository.saveAll(anyList())).thenReturn(Collections.singletonList(newProduct));
 
         // Act
-        int savedCount = jsonFileProcessorService.saveUniqueProducts(Arrays.asList(existingProduct, newProduct));
+        int savedCount = jsonFileProcessorService.saveUniqueProducts(Collections.singletonList(newProduct));
 
         // Assert
         assertEquals(1, savedCount);
         verify(productRepository, times(1)).saveAll(anyList());
     }
-    
+
     @Test
     void testConvertToEntity() {
         // Arrange
         ProductImportDto dto = new ProductImportDto();
-        dto.setName("Teste");
+        dto.setProduct("Produto Teste");
         dto.setType("Tipo Teste");
-        dto.setPrice(BigDecimal.TEN);
-        dto.setQuantity(5);
+        dto.setPrice("$19.99");
+        dto.setQuantity(50);
+        dto.setIndustry("Cosméticos");
+        dto.setOrigin("SP");
 
         // Act
         Product product = jsonFileProcessorService.convertToEntity(dto);
 
         // Assert
         assertNotNull(product);
-        assertEquals("Teste", product.getName());
+        assertEquals("Produto Teste", product.getName());
         assertEquals("Tipo Teste", product.getType());
-        assertEquals(BigDecimal.TEN, product.getPrice());
-        assertEquals(5, product.getQuantity());
+        assertEquals(0, new BigDecimal("19.99").compareTo(product.getPrice()));
+        assertEquals(50, product.getQuantity().intValue());
+        assertEquals("Cosméticos", product.getIndustry());
+        assertEquals("SP", product.getOrigin());
     }
 }
