@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -12,7 +13,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.context.request.ServletWebRequest;
 import br.com.boticario.agp.gestaoprodutos.exception.AuthenticationException;
+import br.com.boticario.agp.gestaoprodutos.exception.ResourceAlreadyExistsException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.time.LocalDateTime;
@@ -31,6 +34,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
         log.error("Recurso não encontrado: {}", ex.getMessage());
         return buildErrorResponse(ex, HttpStatus.NOT_FOUND, request);
+    }
+    
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<Object> handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex, WebRequest request) {
+        log.error("Conflito de recursos: {}", ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
     }
 
     @ExceptionHandler(InvalidJsonFormatException.class)
@@ -53,9 +62,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return buildErrorResponse(new RuntimeException(errorMessage), HttpStatus.CONFLICT, request);
     }
 
+    @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex, HttpHeaders headers, 
-            HttpStatus status, WebRequest request) {
+            HttpStatusCode status, WebRequest request) {
         
         Map<String, String> errors = ex.getBindingResult()
                 .getFieldErrors()
@@ -68,14 +78,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         
         log.error("Erro de validação: {}", errors);
         
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", status.value());
-        body.put("error", "Erro de validação");
-        body.put("message", "Erro ao validar os campos da requisição");
-        body.put("errors", errors);
+        // Create the response body with the expected format
+        Map<String, Object> responseBody = new LinkedHashMap<>();
+        responseBody.put("timestamp", LocalDateTime.now());
+        responseBody.put("status", status.value());
+        responseBody.put("error", "Bad Request");
+        responseBody.put("message", "Erro de validação");
+        responseBody.put("path", ((ServletWebRequest) request).getRequest().getRequestURI());
+        responseBody.put("errors", errors);
         
-        return new ResponseEntity<>(body, headers, status);
+        return new ResponseEntity<>(responseBody, headers, status);
     }
 
     protected ResponseEntity<Object> handleHttpMessageNotReadable(

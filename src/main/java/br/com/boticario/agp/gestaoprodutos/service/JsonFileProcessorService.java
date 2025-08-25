@@ -146,6 +146,10 @@ public class JsonFileProcessorService {
             String errorMsg = String.format("Erro ao ler o arquivo %s: %s", filename, e.getMessage());
             log.error(errorMsg, e);
             return CompletableFuture.completedFuture(Collections.emptyList()); // Retorna lista vazia para erro de leitura
+        } catch (Exception e) { // Catch any other unexpected exceptions during file processing
+            String errorMsg = String.format("Erro inesperado ao processar o arquivo %s: %s", filename, e.getMessage());
+            log.error(errorMsg, e);
+            return CompletableFuture.completedFuture(Collections.emptyList()); // Retorna lista vazia para erro inesperado
         }
     }
 

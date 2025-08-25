@@ -41,7 +41,7 @@ class JsonFileProcessorServiceTest {
     @InjectMocks
     private JsonFileProcessorService jsonFileProcessorService;
 
-    private static final String SAMPLE_JSON = "[{\"name\":\"Produto Teste\",\"type\":\"Tipo Teste\",\"price\":10.50,\"quantity\":100}]";
+    private static final String SAMPLE_JSON = "[{\"product\":\"Produto Teste\",\"type\":\"Tipo Teste\",\"price\":10.50,\"quantity\":100}]";
 
     @BeforeEach
     void setUp() {

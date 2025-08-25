@@ -103,7 +103,7 @@
 {"product":"FFWM","quantity":81,"price":"$9.69","type":"3XL","industry":"Major Banks","origin":"WV"},
 {"product":"SUPV","quantity":34,"price":"$8.44","type":"M","industry":"Commercial Banks","origin":"AZ"},
 {"product":"SUPN","quantity":7,"price":"$7.61","type":"M","industry":"Major Pharmaceuticals","origin":"GA"},
-{"product":"ELS","quantity":3,"price":"$0.00","type":"XS","industry":"Real Estate Investment Trusts","origin":"CA"},
+{"product":"ELS","quantity":3,"price":"$1.00","type":"XS","industry":"Real Estate Investment Trusts","origin":"CA"},
 {"product":"ADSW","quantity":2,"price":"$0.19","type":"2XL","industry":"Environmental Services","origin":"FL"},
 {"product":"COP","quantity":81,"price":"$4.56","type":"XS","industry":"Integrated oil Companies","origin":"IL"},
 {"product":"TR","quantity":71,"price":"$7.49","type":"L","industry":"Specialty Foods","origin":"NV"},

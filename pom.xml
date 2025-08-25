@@ -220,27 +220,14 @@
 					</execution>
 				</executions>
 			</plugin>
+            <!-- Desabilitar flyway-maven-plugin durante a fase de teste -->
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>10.10.0</version>
                 <configuration>
-                    <url>${spring.datasource.url}</url>
-                    <user>${spring.datasource.username}</user>
-                    <password>${spring.datasource.password}</password>
-                    <locations>
-                        <location>classpath:db/migration</location>
-                    </locations>
-                    <baselineOnMigrate>true</baselineOnMigrate>
-                    <validateOnMigrate>true</validateOnMigrate>
+                    <skip>true</skip>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.postgresql</groupId>
-                        <artifactId>postgresql</artifactId>
-                        <version>42.7.3</version>
-                    </dependency>
-                </dependencies>
             </plugin>
 		</plugins>
 	</build>
