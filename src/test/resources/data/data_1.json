@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "product": "Produto Teste 1",
+      "type": "Tipo A",
+      "price": "$19.99",
+      "quantity": 100,
+      "industry": "Teste",
+      "origin": "Teste"
+    },
+    {
+      "product": "Produto Teste 2",
+      "type": "Tipo B",
+      "price": "$29.99",
+      "quantity": 50,
+      "industry": "Teste",
+      "origin": "Teste"
+    }
+  ]
+}
