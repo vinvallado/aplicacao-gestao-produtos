@@ -34,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Slf4j
 @SpringBootTest(classes = AplicacaoGestaoProdutosApplication.class)
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles("integration-test")
 @ContextConfiguration(classes = TestcontainersConfiguration.class)
 @Transactional
 class AuthControllerIntegrationTest {

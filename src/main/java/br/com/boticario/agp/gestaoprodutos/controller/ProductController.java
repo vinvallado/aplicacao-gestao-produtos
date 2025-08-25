@@ -58,13 +58,15 @@ public class ProductController {
         // Cria o objeto de paginação
         Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
         
+        // Se nenhum critério for fornecido, retorna todos os produtos
+        
         // Cria o objeto de busca
         ProductSearchRequest searchRequest = ProductSearchRequest.builder()
                 .name(name)
                 .minPrice(minPrice != null ? BigDecimal.valueOf(minPrice) : null)
                 .maxPrice(maxPrice != null ? BigDecimal.valueOf(maxPrice) : null)
                 .build();
-        
+                
         // Executa a busca
         PageResponse<ProductResponse> response = productService.searchProducts(searchRequest, pageable);
         

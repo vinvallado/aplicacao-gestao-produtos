@@ -40,12 +40,15 @@ public class JwtService {
     }
     
     public String generateToken(Map<String, Object> extraClaims, User user) {
+        long now = System.currentTimeMillis();
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
                 .setSubject(user.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.expirationMs()))
+                .setIssuer(jwtProperties.issuer())
+                .setAudience(jwtProperties.audience())
+                .setIssuedAt(new Date(now))
+                .setExpiration(new Date(now + jwtProperties.expirationMs()))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

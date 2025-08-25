@@ -4,6 +4,7 @@ import br.com.boticario.agp.gestaoprodutos.dto.PageResponse;
 import br.com.boticario.agp.gestaoprodutos.dto.ProductRequest;
 import br.com.boticario.agp.gestaoprodutos.dto.ProductResponse;
 import br.com.boticario.agp.gestaoprodutos.dto.ProductSearchRequest;
+import br.com.boticario.agp.gestaoprodutos.exception.ResourceAlreadyExistsException;
 import br.com.boticario.agp.gestaoprodutos.exception.ResourceNotFoundException;
 import br.com.boticario.agp.gestaoprodutos.model.Product;
 import br.com.boticario.agp.gestaoprodutos.repository.ProductRepository;
@@ -34,11 +35,6 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public PageResponse<ProductResponse> searchProducts(ProductSearchRequest searchRequest, Pageable pageable) {
         log.debug("Buscando produtos com critérios: {}", searchRequest);
-        
-        // Valida se pelo menos um critério de busca foi informado
-        if (!searchRequest.hasSearchCriteria()) {
-            throw new IllegalArgumentException("Pelo menos um critério de busca deve ser informado (nome ou faixa de preço)");
-        }
         
         // Configura a ordenação padrão por nome
         Pageable sortedPageable = PageRequest.of(
@@ -87,7 +83,7 @@ public class ProductServiceImpl implements ProductService {
         
         // Verifica se já existe um produto com o mesmo nome e tipo
         if (existsByNameAndType(productRequest.getName(), productRequest.getType())) {
-            throw new IllegalArgumentException("Já existe um produto com o mesmo nome e tipo");
+            throw new ResourceAlreadyExistsException("Já existe um produto com o mesmo nome e tipo");
         }
         
         // Converte o DTO para entidade
@@ -122,7 +118,7 @@ public class ProductServiceImpl implements ProductService {
                 productRequest.getType(), 
                 id)) {
             
-            throw new IllegalArgumentException("Já existe outro produto com o mesmo nome e tipo");
+            throw new ResourceAlreadyExistsException("Já existe um produto com o mesmo nome e tipo");
         }
         
         // Atualiza os dados do produto

@@ -7,9 +7,12 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.DockerImageName;
+import br.com.boticario.agp.gestaoprodutos.config.JwtProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @Slf4j
 @TestConfiguration(proxyBeanMethods = false)
+@EnableConfigurationProperties(JwtProperties.class)
 public class TestcontainersConfiguration {
 
     private static final String POSTGRES_IMAGE = "postgres:15.3";

@@ -5,7 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import br.com.boticario.agp.gestaoprodutos.config.JwtProperties;
 
-@SpringBootApplication(scanBasePackages = "br.com.boticario.agp.gestaoprodutos")
+@SpringBootApplication
+        (scanBasePackages = "br.com.boticario.agp.gestaoprodutos")
 @EnableConfigurationProperties(JwtProperties.class)
 public class AplicacaoGestaoProdutosApplication {
 

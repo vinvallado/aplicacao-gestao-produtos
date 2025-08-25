@@ -30,13 +30,21 @@ public class ProductSearchRequest {
     private BigDecimal maxPrice;
     
     /**
-     * Valida se pelo menos um dos parâmetros de busca foi informado.
+     * Checks if there are any search criteria specified.
      * 
-     * @return true se pelo menos um parâmetro foi informado, false caso contrário
+     * @return true if any search criteria is specified, false otherwise
      */
     public boolean hasSearchCriteria() {
         return (name != null && !name.trim().isEmpty()) || 
                minPrice != null || 
                maxPrice != null;
+    }
+    
+    /**
+     * Creates a ProductSearchRequest with no criteria, which will return all products
+     * @return a new ProductSearchRequest with no criteria
+     */
+    public static ProductSearchRequest allProducts() {
+        return ProductSearchRequest.builder().build();
     }
 }

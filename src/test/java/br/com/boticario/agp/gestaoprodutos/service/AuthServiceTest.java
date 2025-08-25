@@ -4,6 +4,7 @@ import br.com.boticario.agp.gestaoprodutos.dto.request.LoginRequest;
 import br.com.boticario.agp.gestaoprodutos.dto.request.RegisterRequest;
 import br.com.boticario.agp.gestaoprodutos.dto.response.AuthResponse;
 import br.com.boticario.agp.gestaoprodutos.exception.AuthenticationException;
+import br.com.boticario.agp.gestaoprodutos.exception.ResourceAlreadyExistsException;
 import br.com.boticario.agp.gestaoprodutos.model.User;
 import br.com.boticario.agp.gestaoprodutos.repository.UserRepository;
 import br.com.boticario.agp.gestaoprodutos.security.jwt.JwtService;
@@ -158,10 +159,10 @@ class AuthServiceTest {
     }
 
     @Test
-    void register_shouldThrowAuthenticationException_whenUsernameAlreadyExists() {
+    void register_shouldThrowResourceAlreadyExistsException_whenUsernameAlreadyExists() {
         when(userRepository.existsByUsername(anyString())).thenReturn(true);
 
-        AuthenticationException exception = assertThrows(AuthenticationException.class, () -> {
+        ResourceAlreadyExistsException exception = assertThrows(ResourceAlreadyExistsException.class, () -> {
             authService.register(registerRequest);
         });
 
@@ -172,11 +173,11 @@ class AuthServiceTest {
     }
 
     @Test
-    void register_shouldThrowAuthenticationException_whenEmailAlreadyExists() {
+    void register_shouldThrowResourceAlreadyExistsException_whenEmailAlreadyExists() {
         when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(userRepository.existsByEmail(anyString())).thenReturn(true);
 
-        AuthenticationException exception = assertThrows(AuthenticationException.class, () -> {
+        ResourceAlreadyExistsException exception = assertThrows(ResourceAlreadyExistsException.class, () -> {
             authService.register(registerRequest);
         });
 

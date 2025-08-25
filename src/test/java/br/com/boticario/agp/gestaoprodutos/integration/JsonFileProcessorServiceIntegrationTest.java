@@ -1,6 +1,7 @@
 package br.com.boticario.agp.gestaoprodutos.integration;
 
 import br.com.boticario.agp.gestaoprodutos.AplicacaoGestaoProdutosApplication;
+import br.com.boticario.agp.gestaoprodutos.TestcontainersConfiguration;
 import br.com.boticario.agp.gestaoprodutos.model.Product;
 import br.com.boticario.agp.gestaoprodutos.repository.ProductRepository;
 import br.com.boticario.agp.gestaoprodutos.service.JsonFileProcessorService;
@@ -12,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
@@ -30,8 +32,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @Slf4j
 @SpringBootTest(classes = AplicacaoGestaoProdutosApplication.class)
-@ActiveProfiles("test")
-@TestPropertySource(locations = "classpath:application-test.properties")
+@ActiveProfiles("integration-test")
+@ContextConfiguration(classes = TestcontainersConfiguration.class)
+@TestPropertySource(locations = "classpath:application-integration-test.properties")
 class JsonFileProcessorServiceIntegrationTest {
 
     @Autowired

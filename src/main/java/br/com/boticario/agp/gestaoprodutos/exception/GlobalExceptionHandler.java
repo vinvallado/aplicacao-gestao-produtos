@@ -3,6 +3,7 @@ package br.com.boticario.agp.gestaoprodutos.exception;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -30,6 +31,12 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+        log.error("Argumento inválido: {}", ex.getMessage());
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, request);
+    }
+    
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Object> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
         log.error("Recurso não encontrado: {}", ex.getMessage());
@@ -40,6 +47,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex, WebRequest request) {
         log.error("Conflito de recursos: {}", ex.getMessage());
         return buildErrorResponse(ex, HttpStatus.CONFLICT, request);
+    }
+    
+    @ExceptionHandler(JpaSystemException.class)
+    public ResponseEntity<Object> handleJpaSystemException(JpaSystemException ex, WebRequest request) {
+        log.error("Erro no JPA: {}", ex.getMessage(), ex);
+        String message = "Erro ao processar a requisição: " + ex.getMostSpecificCause().getMessage();
+        return buildErrorResponse(new RuntimeException(message, ex), HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
     @ExceptionHandler(InvalidJsonFormatException.class)
