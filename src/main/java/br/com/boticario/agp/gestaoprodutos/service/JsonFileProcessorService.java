@@ -123,91 +123,89 @@ public class JsonFileProcessorService {
                 throw new InvalidJsonFormatException("Formato JSON inválido no arquivo " + filename + ": esperado um array ou um objeto com campo 'data' contendo um array");
             }
             
-            // Valida os DTOs
-            validateProductDtos(productDtos, filename);
-            
-            // Converte DTOs para entidades
-            List<Product> products = productDtos.stream()
-                    .map(this::convertToEntity)
-                    .collect(Collectors.toList());
+            // Converte DTOs para entidades, filtrando os inválidos
+            List<Product> products = new ArrayList<>();
+            for (int i = 0; i < productDtos.size(); i++) {
+                ProductImportDto dto = productDtos.get(i);
+                try {
+                    validateProductDto(dto, filename, i + 1); // Valida DTO individualmente
+                    products.add(convertToEntity(dto));
+                } catch (InvalidJsonFormatException e) {
+                    log.warn("Produto inválido no arquivo {}: {}", filename, e.getMessage());
+                    // Continua processando os outros produtos
+                }
+            }
 
             log.info("Arquivo {} processado com sucesso. {} produtos válidos encontrados.", filename, products.size());
             return CompletableFuture.completedFuture(products);
         } catch (JsonParseException | JsonMappingException e) {
             String errorMsg = String.format("Formato JSON inválido no arquivo %s: %s", filename, e.getMessage());
             log.error(errorMsg, e);
-            throw new InvalidJsonFormatException(errorMsg, e);
+            return CompletableFuture.completedFuture(Collections.emptyList()); // Retorna lista vazia para arquivo inválido
         } catch (IOException e) {
             String errorMsg = String.format("Erro ao ler o arquivo %s: %s", filename, e.getMessage());
             log.error(errorMsg, e);
-            throw new RuntimeException(errorMsg, e);
+            return CompletableFuture.completedFuture(Collections.emptyList()); // Retorna lista vazia para erro de leitura
         }
     }
 
     /**
-     * Valida a lista de DTOs de produtos.
+     * Valida um único DTO de produto.
      * 
-     * @param productDtos Lista de DTOs a serem validados
+     * @param dto O DTO a ser validado
      * @param filename Nome do arquivo para mensagens de erro
+     * @param index Índice do produto no arquivo (para mensagens de erro)
      * @throws InvalidJsonFormatException Se a validação falhar
      */
-    private void validateProductDtos(List<ProductImportDto> productDtos, String filename) {
-        if (productDtos == null || productDtos.isEmpty()) {
-            throw new InvalidJsonFormatException("O arquivo " + filename + " está vazio ou contém um JSON inválido.");
+    private void validateProductDto(ProductImportDto dto, String filename, int index) {
+        // Validação do campo product (nome do produto)
+        if (dto.getProduct() == null || dto.getProduct().trim().isEmpty()) {
+            throw new InvalidJsonFormatException(
+                String.format("Erro no arquivo %s, produto #%d: O campo 'product' é obrigatório.", filename, index));
         }
-
-        for (int i = 0; i < productDtos.size(); i++) {
-            ProductImportDto dto = productDtos.get(i);
-            
-            // Validação do campo product (nome do produto)
-            if (dto.getProduct() == null || dto.getProduct().trim().isEmpty()) {
+        
+        // Validação do campo type
+        if (dto.getType() == null || dto.getType().trim().isEmpty()) {
+            throw new InvalidJsonFormatException(
+                String.format("Erro no arquivo %s, produto '%s': O campo 'type' é obrigatório.", filename, dto.getProduct()));
+        }
+        
+        // Validação do campo price
+        if (dto.getPrice() == null || dto.getPrice().trim().isEmpty()) {
+            throw new InvalidJsonFormatException(
+                String.format("Erro no arquivo %s, produto '%s': O campo 'price' é obrigatório.", filename, dto.getProduct()));
+        }
+        
+        try {
+            // Tenta converter o preço para validar o formato
+            BigDecimal price = new BigDecimal(dto.getPrice().replace("$", ""));
+            if (price.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new InvalidJsonFormatException(
-                    String.format("Erro no arquivo %s, produto #%d: O campo 'product' é obrigatório.", filename, i + 1));
+                    String.format("Erro no arquivo %s, produto '%s': O campo 'price' deve ser maior que zero.", filename, dto.getProduct()));
             }
-            
-            // Validação do campo type
-            if (dto.getType() == null || dto.getType().trim().isEmpty()) {
-                throw new InvalidJsonFormatException(
-                    String.format("Erro no arquivo %s, produto '%s': O campo 'type' é obrigatório.", filename, dto.getProduct()));
-            }
-            
-            // Validação do campo price
-            if (dto.getPrice() == null || dto.getPrice().trim().isEmpty()) {
-                throw new InvalidJsonFormatException(
-                    String.format("Erro no arquivo %s, produto '%s': O campo 'price' é obrigatório.", filename, dto.getProduct()));
-            }
-            
-            try {
-                // Tenta converter o preço para validar o formato
-                BigDecimal price = new BigDecimal(dto.getPrice().replace("$", ""));
-                if (price.compareTo(BigDecimal.ZERO) <= 0) {
-                    throw new InvalidJsonFormatException(
-                        String.format("Erro no arquivo %s, produto '%s': O campo 'price' deve ser maior que zero.", filename, dto.getProduct()));
-                }
-            } catch (NumberFormatException e) {
-                throw new InvalidJsonFormatException(
-                    String.format("Erro no arquivo %s, produto '%s': Formato de preço inválido. Use o formato '$0.00'.", filename, dto.getProduct()));
-            }
-            
-            // Validação do campo quantity
-            if (dto.getQuantity() == null) {
-                throw new InvalidJsonFormatException(
-                    String.format("Erro no arquivo %s, produto '%s': O campo 'quantity' é obrigatório.", filename, dto.getProduct()));
-            }
-            if (dto.getQuantity() < 0) {
-                throw new InvalidJsonFormatException(
-                    String.format("Erro no arquivo %s, produto '%s': O campo 'quantity' não pode ser negativo.", filename, dto.getProduct()));
-            }
-            
-            // Validação do campo industry (opcional)
-            if (dto.getIndustry() == null) {
-                dto.setIndustry(""); // Define como string vazia se for nulo
-            }
-            
-            // Validação do campo origin (opcional)
-            if (dto.getOrigin() == null) {
-                dto.setOrigin(""); // Define como string vazia se for nulo
-            }
+        } catch (NumberFormatException e) {
+            throw new InvalidJsonFormatException(
+                String.format("Erro no arquivo %s, produto '%s': Formato de preço inválido. Use o formato '$0.00'.", filename, dto.getProduct()));
+        }
+        
+        // Validação do campo quantity
+        if (dto.getQuantity() == null) {
+            throw new InvalidJsonFormatException(
+                String.format("Erro no arquivo %s, produto '%s': O campo 'quantity' é obrigatório.", filename, dto.getProduct()));
+        }
+        if (dto.getQuantity() < 0) {
+            throw new InvalidJsonFormatException(
+                String.format("Erro no arquivo %s, produto '%s': O campo 'quantity' não pode ser negativo.", filename, dto.getProduct()));
+        }
+        
+        // Validação do campo industry (opcional)
+        if (dto.getIndustry() == null) {
+            dto.setIndustry(""); // Define como string vazia se for nulo
+        }
+        
+        // Validação do campo origin (opcional)
+        if (dto.getOrigin() == null) {
+            dto.setOrigin(""); // Define como string vazia se for nulo
         }
     }
 
