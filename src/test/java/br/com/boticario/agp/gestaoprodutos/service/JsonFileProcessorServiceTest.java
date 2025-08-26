@@ -1,6 +1,7 @@
 package br.com.boticario.agp.gestaoprodutos.service;
 
 import br.com.boticario.agp.gestaoprodutos.dto.ProductImportDto;
+import br.com.boticario.agp.gestaoprodutos.exception.InvalidJsonFormatException;
 import br.com.boticario.agp.gestaoprodutos.model.Product;
 import br.com.boticario.agp.gestaoprodutos.repository.ProductRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -88,6 +89,87 @@ class JsonFileProcessorServiceTest {
         // Assert
         assertEquals(1, savedCount);
         verify(productRepository, times(1)).saveAll(anyList());
+    }
+
+
+    @Test
+    void testValidateProductDto_InvalidPrice() {
+        // Arrange
+        ProductImportDto dto = new ProductImportDto();
+        dto.setProduct("Test Product");
+        dto.setType("Test Type");
+        dto.setQuantity(10);
+        dto.setIndustry("Test Industry");
+        dto.setOrigin("Test Origin");
+
+        // Test case 1: Null price
+        dto.setPrice(null);
+        InvalidJsonFormatException exception1 = assertThrows(InvalidJsonFormatException.class, () -> {
+            jsonFileProcessorService.validateProductDto(dto, "test.json", 1);
+        });
+        assertTrue(exception1.getMessage().contains("O campo 'price' é obrigatório"));
+
+        // Test case 2: Empty price
+        dto.setPrice("");
+        InvalidJsonFormatException exception2 = assertThrows(InvalidJsonFormatException.class, () -> {
+            jsonFileProcessorService.validateProductDto(dto, "test.json", 1);
+        });
+        assertTrue(exception2.getMessage().contains("O campo 'price' é obrigatório"));
+
+        // Test case 3: Zero price
+        dto.setPrice("$0.00");
+        InvalidJsonFormatException exception3 = assertThrows(InvalidJsonFormatException.class, () -> {
+            jsonFileProcessorService.validateProductDto(dto, "test.json", 1);
+        });
+        assertTrue(exception3.getMessage().contains("O campo 'price' deve ser maior que zero"));
+
+        // Test case 4: Negative price
+        dto.setPrice("-$10.50");
+        InvalidJsonFormatException exception4 = assertThrows(InvalidJsonFormatException.class, () -> {
+            jsonFileProcessorService.validateProductDto(dto, "test.json", 1);
+        });
+        assertTrue(exception4.getMessage().contains("O campo 'price' deve ser maior que zero"));
+
+        // Test case 5: Invalid price format
+        dto.setPrice("abc");
+        InvalidJsonFormatException exception5 = assertThrows(InvalidJsonFormatException.class, () -> {
+            jsonFileProcessorService.validateProductDto(dto, "test.json", 1);
+        });
+        assertTrue(exception5.getMessage().contains("Formato de preço inválido"));
+
+        // Test case 6: Invalid price format with R$
+        dto.setPrice("R$abc");
+        InvalidJsonFormatException exception6 = assertThrows(InvalidJsonFormatException.class, () -> {
+            jsonFileProcessorService.validateProductDto(dto, "test.json", 1);
+        });
+        assertTrue(exception6.getMessage().contains("Formato de preço inválido"));
+    }
+
+    @Test
+    void testValidateProductDto_ValidPrice() {
+        // Arrange
+        ProductImportDto dto = new ProductImportDto();
+        dto.setProduct("Test Product");
+        dto.setType("Test Type");
+        dto.setQuantity(10);
+        dto.setIndustry("Test Industry");
+        dto.setOrigin("Test Origin");
+
+        // Test case 1: Valid price with $ and dot
+        dto.setPrice("$10.50");
+        assertDoesNotThrow(() -> jsonFileProcessorService.validateProductDto(dto, "test.json", 1));
+
+        // Test case 2: Valid price with R$ and comma
+        dto.setPrice("R$10,50");
+        assertDoesNotThrow(() -> jsonFileProcessorService.validateProductDto(dto, "test.json", 1));
+
+        // Test case 3: Valid price without currency symbol, with dot
+        dto.setPrice("25.75");
+        assertDoesNotThrow(() -> jsonFileProcessorService.validateProductDto(dto, "test.json", 1));
+
+        // Test case 4: Valid price without currency symbol, with comma
+        dto.setPrice("30,00");
+        assertDoesNotThrow(() -> jsonFileProcessorService.validateProductDto(dto, "test.json", 1));
     }
 
     @Test

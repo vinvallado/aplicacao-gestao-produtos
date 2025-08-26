@@ -131,7 +131,7 @@ public class JsonFileProcessorService {
                     validateProductDto(dto, filename, i + 1); // Valida DTO individualmente
                     products.add(convertToEntity(dto));
                 } catch (InvalidJsonFormatException e) {
-                    log.warn("Produto inválido no arquivo {}: {}", filename, e.getMessage());
+                    log.warn("Produto no arquivo {} (linha {}): Ignorado devido a erro de validação: {}", filename, i + 1, e.getMessage());
                     // Continua processando os outros produtos
                 }
             }
@@ -161,7 +161,7 @@ public class JsonFileProcessorService {
      * @param index Índice do produto no arquivo (para mensagens de erro)
      * @throws InvalidJsonFormatException Se a validação falhar
      */
-    private void validateProductDto(ProductImportDto dto, String filename, int index) {
+    void validateProductDto(ProductImportDto dto, String filename, int index) {
         // Validação do campo product (nome do produto)
         if (dto.getProduct() == null || dto.getProduct().trim().isEmpty()) {
             throw new InvalidJsonFormatException(
@@ -182,14 +182,16 @@ public class JsonFileProcessorService {
         
         try {
             // Tenta converter o preço para validar o formato
-            BigDecimal price = new BigDecimal(dto.getPrice().replace("$", ""));
+            BigDecimal price = parsePriceString(dto.getPrice());
             if (price.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new InvalidJsonFormatException(
                     String.format("Erro no arquivo %s, produto '%s': O campo 'price' deve ser maior que zero.", filename, dto.getProduct()));
             }
-        } catch (NumberFormatException e) {
+        } catch (InvalidJsonFormatException e) { // Captura a exceção customizada do parsePriceString
+            throw e; // Re-lança para ser tratada no loop principal
+        } catch (Exception e) { // Captura outras exceções inesperadas durante o parsing
             throw new InvalidJsonFormatException(
-                String.format("Erro no arquivo %s, produto '%s': Formato de preço inválido. Use o formato '$0.00'.", filename, dto.getProduct()));
+                String.format("Erro no arquivo %s, produto '%s': Formato de preço inválido. Detalhes: %s", filename, dto.getProduct(), e.getMessage()));
         }
         
         // Validação do campo quantity
@@ -280,14 +282,47 @@ public class JsonFileProcessorService {
     }
 
     /**
+     * Converte uma string de preço (ex: "$1.99" ou "R$1.999,99") para BigDecimal.
+     * Lida com diferentes símbolos de moeda e separadores decimais.
+     * @param priceString A string do preço a ser parseada.
+     * @return O valor do preço como BigDecimal.
+     * @throws InvalidJsonFormatException Se o formato do preço for inválido.
+     */
+    private BigDecimal parsePriceString(String priceString) throws InvalidJsonFormatException {
+        if (priceString == null || priceString.trim().isEmpty()) {
+            throw new InvalidJsonFormatException("Preço não pode ser vazio.");
+        }
+
+        String cleanPriceString = priceString.trim();
+        
+        // Remove símbolos de moeda e espaços em branco
+        cleanPriceString = cleanPriceString.replace("$", "").replace("R$", "").trim();
+
+        // Tenta parsear com ponto como separador decimal (formato US/Inglês)
+        try {
+            return new BigDecimal(cleanPriceString);
+        } catch (NumberFormatException e1) {
+            // Se falhar, tenta parsear com vírgula como separador decimal (formato PT-BR)
+            try {
+                java.text.DecimalFormatSymbols symbols = new java.text.DecimalFormatSymbols(new Locale("pt", "BR"));
+                symbols.setDecimalSeparator(',');
+                symbols.setGroupingSeparator('.'); // Assume ponto como separador de milhares para PT-BR
+                java.text.DecimalFormat format = new java.text.DecimalFormat("#,##0.00", symbols);
+                format.setParseBigDecimal(true); // Garante que o parse retorne BigDecimal
+                return (BigDecimal) format.parse(cleanPriceString);
+            } catch (java.text.ParseException | NumberFormatException e2) {
+                throw new InvalidJsonFormatException("Formato de preço inválido: " + priceString);
+            }
+        }
+    }
+
+    /**
      * Converte um DTO de importação para a entidade Product.
      * Método package-private para permitir testes unitários.
      */
     Product convertToEntity(ProductImportDto dto) {
         // Converte o preço de string (ex: "$1.99") para BigDecimal
-        BigDecimal price = dto.getPrice() != null && !dto.getPrice().trim().isEmpty() 
-                ? new BigDecimal(dto.getPrice().replace("$", "")) 
-                : BigDecimal.ZERO;
+        BigDecimal price = parsePriceString(dto.getPrice());
                 
         return Product.builder()
                 .name(dto.getProduct())  // Usa getProduct() em vez de getName()

@@ -21,12 +21,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import br.com.boticario.agp.gestaoprodutos.config.SecurityConfig;
+
 /**
  * Implementação do serviço de produtos.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@AutoConfigureAfter(SecurityConfig.class)
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
