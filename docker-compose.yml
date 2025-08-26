@@ -12,8 +12,7 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=boticario_products
       - PGDATA=/var/lib/postgresql/data/pgdata
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    
       - ./src/main/resources/db/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d boticario_products"]
@@ -33,5 +32,4 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
 
-volumes:
-  postgres_data:
+

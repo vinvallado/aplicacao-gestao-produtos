@@ -42,6 +42,7 @@ public class User implements UserDetails {
     private String email;
     
     @Column(nullable = false)
+    @Builder.Default
     private boolean enabled = true;
     
     @CreationTimestamp

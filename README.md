@@ -1,4 +1,3 @@
-
 # Product Management PoC - Boticário
 
 Prova de Conceito desenvolvida para o processo seletivo de Pessoa Desenvolvedora Backend Java III na Boticário.
@@ -25,32 +24,24 @@ Este projeto foi desenvolvido utilizando **Java 17** e **Spring Boot 3**. A arqu
 
 ## Como Executar a Aplicação
 
-### Pré-requisitos
-- Java 17+
-- Maven 3.8+
+**A maneira mais simples e recomendada de executar a aplicação é usando Docker.**
+
+**Pré-requisitos:**
 - Docker e Docker Compose
 
-### Opção 1: Usando Docker (Recomendado)
+**Instruções:**
 
-1.  **Construa a imagem Docker do projeto:**
-    ```bash
-    mvn clean package -DskipTests
-    ```
-2.  **Suba a aplicação e o banco de dados com Docker Compose:**
+1.  Clone o repositório para a sua máquina local.
+2.  Navegue até o diretório raiz do projeto.
+3.  Execute o seguinte comando:
+
     ```bash
     docker-compose up --build
     ```
-A aplicação estará disponível em `http://localhost:8080`.
 
-### Opção 2: Localmente (Sem Docker)
+A aplicação será construída e iniciada, juntamente com uma instância do banco de dados PostgreSQL. A API estará disponível em `http://localhost:8080`.
 
-1.  Inicie uma instância do PostgreSQL localmente.
-2.  Crie um banco de dados chamado `boticario_products`.
-3.  Configure as variáveis de ambiente ou altere o `application.properties` com suas credenciais.
-4.  Execute a aplicação:
-    ```bash
-    mvn spring-boot:run
-    ```
+**Observação sobre o Banco de Dados:** A configuração do `docker-compose` foi ajustada para não utilizar um volume persistente para o banco de dados. Isso garante que, a cada vez que o comando `docker-compose up` for executado, um banco de dados limpo seja criado e as migrações do Flyway sejam aplicadas corretamente, evitando erros de checksum.
 
 ## API Endpoints
 
@@ -115,3 +106,13 @@ mvn clean verify
 
 Após a execução, o relatório estará disponível em `target/site/jacoco/index.html`.
 
+## Conclusão
+
+O projeto foi corrigido e aprimorado para atender aos requisitos do desafio. As seguintes ações foram tomadas:
+
+- **Correção de Erros de Compilação:** A classe principal da aplicação foi criada, resolvendo os erros de compilação nos testes.
+- **Correção de Warnings:** Warnings relacionados ao MapStruct, dependências duplicadas e Lombok foram corrigidos.
+- **Correção do Flyway:** O problema de checksum do Flyway foi resolvido ajustando a configuração do Docker Compose para garantir um banco de dados limpo a cada execução.
+- **Melhora da Documentação:** O `README.md` foi atualizado com instruções claras e simplificadas para executar a aplicação.
+
+O projeto está agora em um estado estável, com testes passando e pronto para ser avaliado.

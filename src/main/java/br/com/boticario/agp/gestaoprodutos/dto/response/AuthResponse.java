@@ -15,6 +15,7 @@ public class AuthResponse {
     private String accessToken;
     
     @JsonProperty("token_type")
+    @Builder.Default
     private String tokenType = "Bearer";
     
     @JsonProperty("expires_in")

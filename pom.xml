@@ -180,16 +180,7 @@
             <version>5.3.1</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>test</scope>
-        </dependency>
+        
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -219,7 +210,7 @@
 						</path>
 					</annotationProcessorPaths>
 					<compilerArgs>
-						<arg>-Amapstruct.defaultComponentModel=spring</arg>
+						<compilerArg>-Amapstruct.defaultComponentModel=spring</compilerArg>
 					</compilerArgs>
 				</configuration>
 			</plugin>
